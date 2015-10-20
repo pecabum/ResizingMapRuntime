@@ -156,6 +156,9 @@ public class ViewDragHelper {
          */
         public void onViewDragStateChanged(int state) {}
 
+        public abstract boolean isTouchEnabled();
+
+
         /**
          * Called when the captured view's position changes as the result of a drag or settle.
          *
@@ -516,7 +519,7 @@ public class ViewDragHelper {
             final int newY = mScroller.getCurrY();
             mCallback.onViewPositionChanged(mCapturedView, newX, newY, newX - oldX, newY - oldY);
         }
-        setDragState(STATE_IDLE);
+//        setDragState(STATE_IDLE);
     }
 
     /**
@@ -869,9 +872,11 @@ public class ViewDragHelper {
     void setDragState(int state) {
         if (mDragState != state) {
             mDragState = state;
-            mCallback.onViewDragStateChanged(state);
-            if (mDragState == STATE_IDLE) {
-                mCapturedView = null;
+            if(mCallback.isTouchEnabled()) {
+                mCallback.onViewDragStateChanged(state);
+                if (mDragState == STATE_IDLE) {
+                    mCapturedView = null;
+                }
             }
         }
     }

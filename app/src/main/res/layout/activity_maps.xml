@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.car.testingmaps2.SlidingUpPanelLayout
+    <com.car.testingmaps2.MapPanel
         xmlns:sothree="http://schemas.android.com/apk/res-auto"
         android:id="@+id/sliding_layout"
         android:layout_width="match_parent"
@@ -25,6 +25,7 @@
             android:layout_height="match_parent">
 
             <TextView
+                android:id="@+id/resizingView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@android:color/holo_blue_bright"
@@ -38,7 +39,7 @@
                 android:layout_below="@+id/resizingView"
                 tools:context=".MapsActivity" />
         </LinearLayout>
-    </com.car.testingmaps2.SlidingUpPanelLayout>
+    </com.car.testingmaps2.MapPanel>
 
 
 </RelativeLayout>
