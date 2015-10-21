@@ -25,6 +25,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.animation.Interpolator;
+import android.widget.RelativeLayout;
 
 import java.util.Arrays;
 
@@ -974,7 +975,9 @@ public class ViewDragHelper {
                 if (toCapture == mCapturedView && mDragState == STATE_SETTLING) {
                     tryCaptureViewForDrag(toCapture, pointerId);
                 }
-
+                if (toCapture.getId() == R.id.mapContainer) {
+                  return false;
+                }
                 final int edgesTouched = mInitialEdgesTouched[pointerId];
                 if ((edgesTouched & mTrackingEdges) != 0) {
                     mCallback.onEdgeTouched(edgesTouched & mTrackingEdges, pointerId);

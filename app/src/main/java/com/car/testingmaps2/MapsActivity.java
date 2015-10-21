@@ -1,13 +1,18 @@
 package com.car.testingmaps2;
 
+import android.content.Context;
+import android.content.res.Resources;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -18,39 +23,38 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, MapPanel.PanelSlideListener {
 
+    private static final String TAG = MapsActivity.class.getSimpleName();
     private GoogleMap mMap;
     private SupportMapFragment mapFragment;
     ViewGroup rootLayout;
     private int height;
     private float dY;
     private LatLng sydney;
-    MapPanel slidingLayout;
+    private MapPanel slidingLayout;
+    private float pxOfDp;
     private View resizingView;
-
+    private Handler mainHandler;
+    private LinearLayout resizedLayout;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
+
+        // Get a handler that can be used to post to the main thread
+        mainHandler = new Handler(getMainLooper());
+
+
+        pxOfDp = convertDpToPixels(1, getApplicationContext());
         rootLayout = (ViewGroup) findViewById(R.id.root);
         slidingLayout = (MapPanel) findViewById(R.id.sliding_layout);
         resizingView = findViewById(R.id.resizingView);
+        resizedLayout = (LinearLayout) findViewById(R.id.resizedLayout);
 
-        resizingView.setOnTouchListener(new View.OnTouchListener() {
+        resizedLayout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        slidingLayout.setTouchEnabled(true);//TouchEnabled(false);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        slidingLayout.setTouchEnabled(false);
-                        break;
-
-                }
-
+                Log.d(TAG, "onTouch: " + (v.getClass().getName()));
                 return false;
             }
         });
@@ -72,55 +76,46 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-//        slidingLayout.setTouchEnabled(true);
-
     }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        // Add a marker in Sydney and move the camera
-        sydney = new LatLng(-34, 151);
+        sydney = new LatLng(43.211722, 27.916240);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(sydney.latitude - 7, sydney.longitude), 5));
-
-        mapFragment.getView().setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN:
-                        slidingLayout.setTouchEnabled(false);//TouchEnabled(false);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        slidingLayout.setTouchEnabled(true);
-                        break;
-
-                }
-
-                return false;
-            }
-        });
     }
 
     @Override
-    public void onPanelSlide(View panel, float slideOffset) {
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-//        Log.d("d1", "panel slide: " + slideOffset);;
+    public void onPanelSlide(View panel, final float slideOffset) {
+
+    }
+
+    @Override
+    public void onPanelDragged(View panel, final float slideOffset) {
+        Log.d("d1", "panel drag: " + Math.round(slideOffset));
+//        mainHandler.post(new Runnable() {
+//            @Override
+//            public void run() {
+////                mMap.moveCamera(CameraUpdateFactory.scrollBy(0, slideOffset / 2));
+//            }
+//        });
     }
 
     @Override
     public void onPanelCollapsed(View panel) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getCameraPosition().target.latitude - 7, mMap.getCameraPosition().target.longitude), 5));
+//        slidingLayout.setTouchEnabled(false);
+//          mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getCameraPosition().target.latitude - 7, mMap.getCameraPosition().target.longitude), 5));
     }
 
     @Override
     public void onPanelExpanded(View panel) {
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-                new LatLng(mMap.getCameraPosition().target.latitude + 7,
-                        mMap.getCameraPosition().target.longitude), 5));
-        Log.d("d1", "onPanelExpanded");
+//        slidingLayout.setTouchEnabled(false);
+//
+////        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+////                new LatLng(mMap.getCameraPosition().target.latitude + 7,
+////                        mMap.getCameraPosition().target.longitude), 5));
+//        Log.d("d1", "onPanelExpanded");
     }
 
     @Override
@@ -131,5 +126,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onPanelHidden(View panel) {
         Log.d("d1", "onPanelHidden");
+    }
+
+    public static int convertDpToPixels(float dp, Context context) {
+        int px = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, context.getResources().getDisplayMetrics());
+        return px;
     }
 }

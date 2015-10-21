@@ -204,6 +204,8 @@ public class MapPanel extends ViewGroup {
          */
         public void onPanelSlide(View panel, float slideOffset);
 
+        public void onPanelDragged(View panel, float slideOffset);
+
         /**
          * Called when a sliding panel becomes slid completely collapsed.
          *
@@ -240,6 +242,11 @@ public class MapPanel extends ViewGroup {
     public static class SimplePanelSlideListener implements PanelSlideListener {
         @Override
         public void onPanelSlide(View panel, float slideOffset) {
+        }
+
+        @Override
+        public void onPanelDragged(View panel, float slideOffset) {
+
         }
 
         @Override
@@ -295,7 +302,7 @@ public class MapPanel extends ViewGroup {
                 mMinFlingVelocity = ta.getInt(R.styleable.SlidingUpPanelLayout_umanoFlingVelocity, DEFAULT_MIN_FLING_VELOCITY);
                 mCoveredFadeColor = ta.getColor(R.styleable.SlidingUpPanelLayout_umanoFadeColor, DEFAULT_FADE_COLOR);
 
-                mDragViewResId = ta.getResourceId(R.styleable.SlidingUpPanelLayout_umanoDragView, -1);
+//                mDragViewResId = ta.getResourceId(R.styleable.SlidingUpPanelLayout_umanoDragView, -1);
                 mScrollableViewResId = ta.getResourceId(R.styleable.SlidingUpPanelLayout_umanoScrollableView, -1);
 
                 mOverlayContent = ta.getBoolean(R.styleable.SlidingUpPanelLayout_umanoOverlay, DEFAULT_OVERLAY_FLAG);
@@ -334,8 +341,9 @@ public class MapPanel extends ViewGroup {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
+        mDragViewResId = R.id.resizingView;
         if (mDragViewResId != -1) {
-            setDragView(findViewById(mDragViewResId));
+            setDragView(findViewById(R.id.resizingView));
         }
         if (mScrollableViewResId != -1) {
             setScrollableView(findViewById(mScrollableViewResId));
@@ -1035,6 +1043,7 @@ public class MapPanel extends ViewGroup {
     private int computePanelTopPosition(float slideOffset) {
         int slidingViewHeight = mSlideableView != null ? mSlideableView.getMeasuredHeight() : 0;
         int slidePixelOffset = (int) (slideOffset * mSlideRange);
+        Log.d(TAG, "computePanelTopPosition: " + slideOffset);
         // Compute the top of the panel if its collapsed
         return mIsSlidingUp
                 ? getMeasuredHeight() - getPaddingBottom() - mPanelHeight - slidePixelOffset
@@ -1110,35 +1119,35 @@ public class MapPanel extends ViewGroup {
     private void applyParallaxForCurrentSlideOffset() {
         if (mParallaxOffset > 0) {
             int mainViewOffset = getCurrentParallaxOffset();
-                mMainView.setTranslationY(mainViewOffset);
+            mMainView.setTranslationY(mainViewOffset);
 
         }
     }
 
     private void onPanelDragged(int newTop) {
-        Log.d(TAG,"onPanelDragged : " + newTop);
-        if(mIsTouchEnabled) {
-            mLastNotDraggingSlideState = mSlideState;
-            mSlideState = PanelState.DRAGGING;
-            // Recompute the slide offset based on the new top position
-            mSlideOffset = computeSlideOffset(newTop);
-            applyParallaxForCurrentSlideOffset();
-            // Dispatch the slide event
-            dispatchOnPanelSlide(mSlideableView);
-            // If the slide offset is negative, and overlay is not on, we need to increase the
-            // height of the main content
-            LayoutParams lp = (LayoutParams) mMainView.getLayoutParams();
-            int defaultHeight = getHeight() - getPaddingBottom() - getPaddingTop() - mPanelHeight;
+        Log.d(TAG, "onPanelDragged : " + newTop);
+        mPanelSlideListener.onPanelDragged(mSlideableView, mSlideOffset);
+        mLastNotDraggingSlideState = mSlideState;
+        mSlideState = PanelState.DRAGGING;
+        // Recompute the slide offset based on the new top position
+        mSlideOffset = computeSlideOffset(newTop);
+        applyParallaxForCurrentSlideOffset();
+        // Dispatch the slide event
+        dispatchOnPanelSlide(mSlideableView);
+        // If the slide offset is negative, and overlay is not on, we need to increase the
+        // height of the main content
+        LayoutParams lp = (LayoutParams) mMainView.getLayoutParams();
+        int defaultHeight = getHeight() - getPaddingBottom() - getPaddingTop() - mPanelHeight;
 
-            if (mSlideOffset <= 0 && !mOverlayContent) {
-                // expand the main view
-                lp.height = mIsSlidingUp ? (newTop - getPaddingBottom()) : (getHeight() - getPaddingBottom() - mSlideableView.getMeasuredHeight() - newTop);
-                mMainView.requestLayout();
-            } else if (lp.height != defaultHeight && !mOverlayContent) {
-                lp.height = defaultHeight;
-                mMainView.requestLayout();
-            }
+        if (mSlideOffset <= 0 && !mOverlayContent) {
+            // expand the main view
+            lp.height = mIsSlidingUp ? (newTop - getPaddingBottom()) : (getHeight() - getPaddingBottom() - mSlideableView.getMeasuredHeight() - newTop);
+            mMainView.requestLayout();
+        } else if (lp.height != defaultHeight && !mOverlayContent) {
+            lp.height = defaultHeight;
+            mMainView.requestLayout();
         }
+
     }
 
     @Override
@@ -1330,16 +1339,16 @@ public class MapPanel extends ViewGroup {
                     if (mSlideState != PanelState.EXPANDED) {
                         updateObscuredViewVisibility();
                         mSlideState = PanelState.EXPANDED;
-                        if(previousSlideOffset!=mSlideOffset) {
+                        if (previousSlideOffset != mSlideOffset) {
                             dispatchOnPanelExpanded(mSlideableView);
                         }
                     }
                 } else if (mSlideOffset == 0) {
                     if (mSlideState != PanelState.COLLAPSED) {
                         mSlideState = PanelState.COLLAPSED;
-                        if(previousSlideOffset!=mSlideOffset) {
-                            dispatchOnPanelCollapsed(mSlideableView);
-                        }
+//                        if(previousSlideOffset!=mSlideOffset) {
+                        dispatchOnPanelCollapsed(mSlideableView);
+//                        }
                     }
                 } else if (mSlideOffset < 0) {
                     mSlideState = PanelState.HIDDEN;
@@ -1368,7 +1377,9 @@ public class MapPanel extends ViewGroup {
         @Override
         public void onViewPositionChanged(View changedView, int left, int top, int dx, int dy) {
             onPanelDragged(top);
-            Log.d(TAG, "onViewPositionChanged");
+            mPanelSlideListener.onPanelDragged(changedView, dy);
+            Log.d(TAG, "onViewPositionChanged x:" + dx + " y:" + dy + " TOP: " + top);
+
             invalidate();
         }
 
