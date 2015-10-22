@@ -25,7 +25,9 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.ListView;
 import android.widget.ScrollView;
 
-
+/**
+ * Created by Petar
+ */
 public class MapPanel extends ViewGroup {
 
     private static final String TAG = MapPanel.class.getSimpleName();
@@ -36,7 +38,7 @@ public class MapPanel extends ViewGroup {
 
     private static PanelState DEFAULT_SLIDE_STATE = PanelState.COLLAPSED;
 
-    private static final int DEFAULT_SHADOW_HEIGHT = 4; // dp;
+    private static final int DEFAULT_SHADOW_HEIGHT = 4; // in dp;
 
     private static final int DEFAULT_FADE_COLOR = 0x99000000;
 
@@ -51,7 +53,7 @@ public class MapPanel extends ViewGroup {
     };
 
     /**
-     * Minimum velocity that will be detected as a fling
+     * Minimum velocity that will be detected as a gesture fling
      */
     private int mMinFlingVelocity = DEFAULT_MIN_FLING_VELOCITY;
 
@@ -61,14 +63,13 @@ public class MapPanel extends ViewGroup {
     private int mCoveredFadeColor = DEFAULT_FADE_COLOR;
 
     /**
-     * Default parallax length of the main view
+     * Default parallax
      */
     private static final int DEFAULT_PARALLAX_OFFSET = 0;
 
-    /**
-     * The paint used to dim the main layout when sliding
-     */
-    private final Paint mCoveredFadePaint = new Paint();
+
+    // Fade efect - not used , but might be
+//    private final Paint mCoveredFadePaint = new Paint();
 
     /**
      * The size of the overhang in pixels.
@@ -81,7 +82,7 @@ public class MapPanel extends ViewGroup {
     private int mShadowHeight = -1;
 
     /**
-     * Parallax offset
+     * Offset of the parallax effect
      */
     private int mParallaxOffset = -1;
 
@@ -91,7 +92,7 @@ public class MapPanel extends ViewGroup {
     private boolean mIsSlidingUp;
 
     /**
-     * Panel overlays the windows instead of putting it underneath it.
+     * Panel overlays the windows instead of getting underneath it.
      */
     private boolean mOverlayContent = DEFAULT_OVERLAY_FLAG;
 
@@ -101,7 +102,7 @@ public class MapPanel extends ViewGroup {
     private boolean mClipPanel = DEFAULT_CLIP_PANEL_FLAG;
 
     /**
-     * If provided, the panel can be dragged by only this view. Otherwise, the entire panel can be
+     * If provided, the panel can be dragged with this view. Otherwise, the entire panel can be
      * used for dragging.
      */
     private View mDragView;
@@ -228,7 +229,7 @@ public class MapPanel extends ViewGroup {
         public void onPanelAnchored(View panel);
 
         /**
-         * Called when a sliding panel becomes completely hidden.
+         * Called when a sliding panel is hidden.
          *
          * @param panel The child view that was slid to a hidden position
          */
@@ -236,8 +237,7 @@ public class MapPanel extends ViewGroup {
     }
 
     /**
-     * No-op stubs for {@link PanelSlideListener}. If you only want to implement a subset
-     * of the listener methods you can extend this instead of implement the full interface.
+     * If you only want to implement of the listener methods you can extend this instead of implement the completely new.
      */
     public static class SimplePanelSlideListener implements PanelSlideListener {
         @Override
@@ -360,16 +360,6 @@ public class MapPanel extends ViewGroup {
         }
     }
 
-    /**
-     * Set the color used to fade the pane covered by the sliding pane out when the pane
-     * will become fully covered in the expanded state.
-     *
-     * @param color An ARGB-packed color value
-     */
-    public void setCoveredFadeColor(int color) {
-        mCoveredFadeColor = color;
-        invalidate();
-    }
 
     /**
      * @return The ARGB-packed color value used to fade the fixed pane
@@ -415,25 +405,6 @@ public class MapPanel extends ViewGroup {
 
     protected void smoothToBottom() {
         smoothSlideTo(0, 0);
-    }
-
-    /**
-     * @return The current shadow height
-     */
-    public int getShadowHeight() {
-        return mShadowHeight;
-    }
-
-    /**
-     * Set the shadow height
-     *
-     * @param val A height in pixels
-     */
-    public void setShadowHeight(int val) {
-        mShadowHeight = val;
-        if (!mFirstLayout) {
-            invalidate();
-        }
     }
 
     /**
@@ -1118,8 +1089,8 @@ public class MapPanel extends ViewGroup {
     @SuppressLint("NewApi")
     private void applyParallaxForCurrentSlideOffset() {
         if (mParallaxOffset > 0) {
-            int mainViewOffset = getCurrentParallaxOffset();
-            mMainView.setTranslationY(mainViewOffset);
+//            int mainViewOffset = getCurrentParallaxOffset();
+//            mMainView.setTranslationY(mainViewOffset);
 
         }
     }
@@ -1176,8 +1147,8 @@ public class MapPanel extends ViewGroup {
                 final int baseAlpha = (mCoveredFadeColor & 0xff000000) >>> 24;
                 final int imag = (int) (baseAlpha * mSlideOffset);
                 final int color = imag << 24 | (mCoveredFadeColor & 0xffffff);
-                mCoveredFadePaint.setColor(color);
-                canvas.drawRect(mTmpRect, mCoveredFadePaint);
+//                mCoveredFadePaint.setColor(color);
+//                canvas.drawRect(mTmpRect, mCoveredFadePaint);
             }
         } else {
             result = super.drawChild(canvas, child, drawingTime);

@@ -14,27 +14,34 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.LinearLayout;
 
+import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, MapPanel.PanelSlideListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
+    private static final float DEFAULT_ZOOM_LEVEL = 14;
+    private static final double DEFAULT_COLLAPSED_OFFSET = 7;
+
     private GoogleMap mMap;
     private SupportMapFragment mapFragment;
-    ViewGroup rootLayout;
+    private ViewGroup rootLayout;
     private int height;
-    private float dY;
     private LatLng sydney;
     private MapPanel slidingLayout;
     private float pxOfDp;
     private View resizingView;
     private Handler mainHandler;
     private LinearLayout resizedLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -83,7 +90,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         sydney = new LatLng(43.211722, 27.916240);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(sydney.latitude - 7, sydney.longitude), 5));
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, DEFAULT_ZOOM_LEVEL));
+//        LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+//        Log.d(TAG, "onMapReady: " + bounds.toString());
+//
     }
 
     @Override
@@ -94,28 +104,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onPanelDragged(View panel, final float slideOffset) {
         Log.d("d1", "panel drag: " + Math.round(slideOffset));
-//        mainHandler.post(new Runnable() {
-//            @Override
-//            public void run() {
-////                mMap.moveCamera(CameraUpdateFactory.scrollBy(0, slideOffset / 2));
-//            }
-//        });
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                mMap.moveCamera(CameraUpdateFactory.scrollBy(0, slideOffset / 2));
+            }
+        });
     }
 
     @Override
     public void onPanelCollapsed(View panel) {
+
+//        goToLastMarker();
+
+        // Second option
 //        slidingLayout.setTouchEnabled(false);
 //          mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getCameraPosition().target.latitude - 7, mMap.getCameraPosition().target.longitude), 5));
     }
 
+    private void goToLastMarker() {
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(sydney);
+
+        LatLngBounds newBounds = builder.build();
+        CameraUpdate cu = CameraUpdateFactory.newLatLngBounds(newBounds, 0);
+        mMap.animateCamera(cu);
+    }
+
     @Override
     public void onPanelExpanded(View panel) {
-//        slidingLayout.setTouchEnabled(false);
-//
-////        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-////                new LatLng(mMap.getCameraPosition().target.latitude + 7,
-////                        mMap.getCameraPosition().target.longitude), 5));
-//        Log.d("d1", "onPanelExpanded");
+
+        LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+        Log.d(TAG, "onMapReady: " + bounds.toString());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 8));
+        // Second option
+//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+//                new LatLng(mMap.getCameraPosition().target.latitude + DEFAULT_COLLAPSED_OFFSET,
+//                        mMap.getCameraPosition().target.longitude), DEFAULT_ZOOM_LEVEL));
+
     }
 
     @Override

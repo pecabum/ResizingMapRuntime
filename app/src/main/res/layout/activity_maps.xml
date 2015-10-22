@@ -5,12 +5,12 @@
     android:layout_height="match_parent">
 
     <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
         xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
-        android:minHeight="?attr/actionBarSize"/>
+        android:minHeight="?attr/actionBarSize" />
 
     <com.car.testingmaps2.MapPanel xmlns:sothree="http://schemas.android.com/apk/res-auto"
         android:id="@+id/sliding_layout"
@@ -20,12 +20,11 @@
         android:gravity="bottom"
         sothree:umanoPanelHeight="168dp">
 
-        <TextView
+        <FrameLayout
+            android:id="@+id/sample_content_fragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:text="Main Content"
-            android:textSize="16sp" />
+            />
 
         <LinearLayout
             android:id="@+id/resizedLayout"
