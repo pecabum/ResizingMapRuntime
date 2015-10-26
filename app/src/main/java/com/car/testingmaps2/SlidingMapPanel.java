@@ -28,9 +28,9 @@ import android.widget.ScrollView;
 /**
  * Created by Petar
  */
-public class MapPanel extends ViewGroup {
+public class SlidingMapPanel extends ViewGroup {
 
-    private static final String TAG = MapPanel.class.getSimpleName();
+    private static final String TAG = SlidingMapPanel.class.getSimpleName();
 
     private static final int DEFAULT_PANEL_HEIGHT = 68; // dp;
 
@@ -75,11 +75,6 @@ public class MapPanel extends ViewGroup {
      * The size of the overhang in pixels.
      */
     private int mPanelHeight = -1;
-
-    /**
-     * The size of the shadow in pixels.
-     */
-    private int mShadowHeight = -1;
 
     /**
      * Offset of the parallax effect
@@ -131,7 +126,7 @@ public class MapPanel extends ViewGroup {
     private float previousSlideOffset;
 
     /**
-     * Current state of the slideable view.
+     * Current state of the sliding view.
      */
     public enum PanelState {
         EXPANDED,
@@ -182,10 +177,10 @@ public class MapPanel extends ViewGroup {
 
     private PanelSlideListener mPanelSlideListener;
 
-    private final ViewDragHelper mDragHelper;
+    private final DraggingHelper mDragHelper;
 
     /**
-     * Stores whether or not the pane was expanded the last time it was slideable.
+     * Stores whether or not the pane was expanded the last time it was sliding.
      * If expand/collapse operations are invoked this state is modified. Used by
      * instance state save/restore.
      */
@@ -203,78 +198,49 @@ public class MapPanel extends ViewGroup {
          * @param panel       The child view that was moved
          * @param slideOffset The new offset of this sliding pane within its range, from 0-1
          */
-        public void onPanelSlide(View panel, float slideOffset);
+        void onPanelSlide(View panel, float slideOffset);
 
-        public void onPanelDragged(View panel, float slideOffset);
+        void onPanelDragged(View panel, float slideOffset);
 
         /**
          * Called when a sliding panel becomes slid completely collapsed.
          *
          * @param panel The child view that was slid to an collapsed position
          */
-        public void onPanelCollapsed(View panel);
+        void onPanelCollapsed(View panel);
 
         /**
          * Called when a sliding panel becomes slid completely expanded.
          *
          * @param panel The child view that was slid to a expanded position
          */
-        public void onPanelExpanded(View panel);
+        void onPanelExpanded(View panel);
 
         /**
          * Called when a sliding panel becomes anchored.
          *
          * @param panel The child view that was slid to a anchored position
          */
-        public void onPanelAnchored(View panel);
+        void onPanelAnchored(View panel);
 
         /**
          * Called when a sliding panel is hidden.
          *
          * @param panel The child view that was slid to a hidden position
          */
-        public void onPanelHidden(View panel);
+        void onPanelHidden(View panel);
     }
 
-    /**
-     * If you only want to implement of the listener methods you can extend this instead of implement the completely new.
-     */
-    public static class SimplePanelSlideListener implements PanelSlideListener {
-        @Override
-        public void onPanelSlide(View panel, float slideOffset) {
-        }
 
-        @Override
-        public void onPanelDragged(View panel, float slideOffset) {
-
-        }
-
-        @Override
-        public void onPanelCollapsed(View panel) {
-        }
-
-        @Override
-        public void onPanelExpanded(View panel) {
-        }
-
-        @Override
-        public void onPanelAnchored(View panel) {
-        }
-
-        @Override
-        public void onPanelHidden(View panel) {
-        }
-    }
-
-    public MapPanel(Context context) {
+    public SlidingMapPanel(Context context) {
         this(context, null);
     }
 
-    public MapPanel(Context context, AttributeSet attrs) {
+    public SlidingMapPanel(Context context, AttributeSet attrs) {
         this(context, attrs, 0);
     }
 
-    public MapPanel(Context context, AttributeSet attrs, int defStyle) {
+    public SlidingMapPanel(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
         if (isInEditMode()) {
@@ -282,6 +248,8 @@ public class MapPanel extends ViewGroup {
             return;
         }
 
+        //The size of the shadow in pixels.
+        int mShadowHeight = -1;
         if (attrs != null) {
             TypedArray defAttrs = context.obtainStyledAttributes(attrs, DEFAULT_ATTRS);
 
@@ -292,25 +260,25 @@ public class MapPanel extends ViewGroup {
 
             defAttrs.recycle();
 
-            TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingUpPanelLayout);
+            TypedArray ta = context.obtainStyledAttributes(attrs, R.styleable.SlidingMapPanel);
 
             if (ta != null) {
-                mPanelHeight = ta.getDimensionPixelSize(R.styleable.SlidingUpPanelLayout_umanoPanelHeight, -1);
-                mShadowHeight = ta.getDimensionPixelSize(R.styleable.SlidingUpPanelLayout_umanoShadowHeight, -1);
-                mParallaxOffset = ta.getDimensionPixelSize(R.styleable.SlidingUpPanelLayout_umanoParallaxOffset, -1);
+                mPanelHeight = ta.getDimensionPixelSize(R.styleable.SlidingMapPanel_umanoPanelHeight, -1);
+                mShadowHeight = ta.getDimensionPixelSize(R.styleable.SlidingMapPanel_umanoShadowHeight, -1);
+                mParallaxOffset = ta.getDimensionPixelSize(R.styleable.SlidingMapPanel_umanoParallaxOffset, -1);
 
-                mMinFlingVelocity = ta.getInt(R.styleable.SlidingUpPanelLayout_umanoFlingVelocity, DEFAULT_MIN_FLING_VELOCITY);
-                mCoveredFadeColor = ta.getColor(R.styleable.SlidingUpPanelLayout_umanoFadeColor, DEFAULT_FADE_COLOR);
+                mMinFlingVelocity = ta.getInt(R.styleable.SlidingMapPanel_umanoFlingVelocity, DEFAULT_MIN_FLING_VELOCITY);
+                mCoveredFadeColor = ta.getColor(R.styleable.SlidingMapPanel_umanoFadeColor, DEFAULT_FADE_COLOR);
 
-//                mDragViewResId = ta.getResourceId(R.styleable.SlidingUpPanelLayout_umanoDragView, -1);
-                mScrollableViewResId = ta.getResourceId(R.styleable.SlidingUpPanelLayout_umanoScrollableView, -1);
+//                mDragViewResId = ta.getResourceId(R.styleable.SlidingMapPanel_umanoDragView, -1);
+                mScrollableViewResId = ta.getResourceId(R.styleable.SlidingMapPanel_umanoScrollableView, -1);
 
-                mOverlayContent = ta.getBoolean(R.styleable.SlidingUpPanelLayout_umanoOverlay, DEFAULT_OVERLAY_FLAG);
-                mClipPanel = ta.getBoolean(R.styleable.SlidingUpPanelLayout_umanoClipPanel, DEFAULT_CLIP_PANEL_FLAG);
+                mOverlayContent = ta.getBoolean(R.styleable.SlidingMapPanel_umanoOverlay, DEFAULT_OVERLAY_FLAG);
+                mClipPanel = ta.getBoolean(R.styleable.SlidingMapPanel_umanoClipPanel, DEFAULT_CLIP_PANEL_FLAG);
 
-                mAnchorPoint = ta.getFloat(R.styleable.SlidingUpPanelLayout_umanoAnchorPoint, DEFAULT_ANCHOR_POINT);
+                mAnchorPoint = ta.getFloat(R.styleable.SlidingMapPanel_umanoAnchorPoint, DEFAULT_ANCHOR_POINT);
 
-                mSlideState = PanelState.values()[ta.getInt(R.styleable.SlidingUpPanelLayout_umanoInitialState, DEFAULT_SLIDE_STATE.ordinal())];
+                mSlideState = PanelState.values()[ta.getInt(R.styleable.SlidingMapPanel_umanoInitialState, DEFAULT_SLIDE_STATE.ordinal())];
             }
 
             ta.recycle();
@@ -329,7 +297,7 @@ public class MapPanel extends ViewGroup {
 
         setWillNotDraw(false);
 
-        mDragHelper = ViewDragHelper.create(this, 0.5f, new DragHelperCallback());
+        mDragHelper = DraggingHelper.create(this, 0.5f, new DragHelperCallback());
         mDragHelper.setMinVelocity(mMinFlingVelocity * density);
 
         mIsTouchEnabled = true;
@@ -949,7 +917,7 @@ public class MapPanel extends ViewGroup {
         } else if (action == MotionEvent.ACTION_UP && mIsScrollableViewHandlingTouch) {
             // If the scrollable view was handling the touch and we receive an up
             // we want to clear any previous dragging state so we don't intercept a touch stream accidentally
-            mDragHelper.setDragState(ViewDragHelper.STATE_IDLE);
+            mDragHelper.setDragState(DraggingHelper .STATE_IDLE);
         }
 
         // In all other cases, just let the default behavior take over.
@@ -1287,7 +1255,7 @@ public class MapPanel extends ViewGroup {
         mSlideState = ss.mSlideState != null ? ss.mSlideState : DEFAULT_SLIDE_STATE;
     }
 
-    private class DragHelperCallback extends ViewDragHelper.Callback {
+    private class DragHelperCallback extends DraggingHelper.DraggingInteractionCallback{
 
         @Override
         public boolean tryCaptureView(View child, int pointerId) {
@@ -1300,7 +1268,7 @@ public class MapPanel extends ViewGroup {
 
         @Override
         public void onViewDragStateChanged(int state) {
-            if (mDragHelper.getViewDragState() == ViewDragHelper.STATE_IDLE) {
+            if (mDragHelper.getViewDragState() == DraggingHelper.STATE_IDLE) {
                 mSlideOffset = computeSlideOffset(mSlideableView.getTop());
                 Log.d(TAG, "DragStateChanged " + mSlideOffset);
 

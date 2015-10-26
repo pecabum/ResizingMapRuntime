@@ -1,19 +1,4 @@
 package com.car.testingmaps2;
-/*
- * Copyright (C) 2013 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 import android.content.Context;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.VelocityTrackerCompat;
@@ -30,11 +15,10 @@ import android.widget.RelativeLayout;
 import java.util.Arrays;
 
 /**
- * ViewDragHelper is a utility class for writing custom ViewGroups. It offers a number
- * of useful operations and state tracking for allowing a user to drag and reposition
- * views within their parent ViewGroup.
+ *  Created by pecabum at 20/10/15
  */
-public class ViewDragHelper {
+public class DraggingHelper {
+
     private static final String TAG = "ViewDragHelper";
 
     /**
@@ -78,11 +62,6 @@ public class ViewDragHelper {
      * Edge flag indicating that the bottom edge should be affected.
      */
     public static final int EDGE_BOTTOM = 1 << 3;
-
-    /**
-     * Edge flag set indicating all edges should be affected.
-     */
-    public static final int EDGE_ALL = EDGE_LEFT | EDGE_TOP | EDGE_RIGHT | EDGE_BOTTOM;
 
     /**
      * Indicates that a check should occur along the horizontal axis
@@ -130,7 +109,7 @@ public class ViewDragHelper {
 
     private ScrollerCompat mScroller;
 
-    private final Callback mCallback;
+    private final DraggingInteractionCallback mCallback;
 
     private View mCapturedView;
     private boolean mReleaseInProgress;
@@ -138,13 +117,13 @@ public class ViewDragHelper {
     private final ViewGroup mParentView;
 
     /**
-     * A Callback is used as a communication channel with the ViewDragHelper back to the
-     * parent view using it. <code>on*</code>methods are invoked on siginficant events and several
+     * A DraggingInteractionCallback is used as a communication channel with the ViewDragHelper back to the
+     * parent view using it. Methods are invoked on siginficant events and several
      * accessor methods are expected to provide the ViewDragHelper with more information
      * about the state of the parent view upon request. The callback also makes decisions
      * governing the range and draggability of child views.
      */
-    public static abstract class Callback {
+    public static abstract class DraggingInteractionCallback {
         /**
          * Called when the drag state changes. See the <code>STATE_*</code> constants
          * for more information.
@@ -189,7 +168,7 @@ public class ViewDragHelper {
          *
          * <p>Calling code may decide to fling or otherwise release the view to let it
          * settle into place. It should do so using {@link #settleCapturedViewAt(int, int)}
-         * or {@link #flingCapturedView(int, int, int, int)}. If the Callback invokes
+         * or {@link #flingCapturedView(int, int, int, int)}. If the DraggingInteractionCallback invokes
          * one of these methods, the ViewDragHelper will enter {@link #STATE_SETTLING}
          * and the view capture will not fully end until it comes to a complete stop.
          * If neither of these methods is invoked before <code>onViewReleased</code> returns,
@@ -342,11 +321,11 @@ public class ViewDragHelper {
      * Factory method to create a new ViewDragHelper.
      *
      * @param forParent Parent view to monitor
-     * @param cb Callback to provide information and receive events
+     * @param cb DraggingInteractionCallback to provide information and receive events
      * @return a new ViewDragHelper instance
      */
-    public static ViewDragHelper create(ViewGroup forParent, Callback cb) {
-        return new ViewDragHelper(forParent.getContext(), forParent, cb);
+    public static DraggingHelper  create(ViewGroup forParent, DraggingInteractionCallback cb) {
+        return new DraggingHelper (forParent.getContext(), forParent, cb);
     }
 
     /**
@@ -355,11 +334,11 @@ public class ViewDragHelper {
      * @param forParent Parent view to monitor
      * @param sensitivity Multiplier for how sensitive the helper should be about detecting
      *                    the start of a drag. Larger values are more sensitive. 1.0f is normal.
-     * @param cb Callback to provide information and receive events
+     * @param cb DraggingInteractionCallback to provide information and receive events
      * @return a new ViewDragHelper instance
      */
-    public static ViewDragHelper create(ViewGroup forParent, float sensitivity, Callback cb) {
-        final ViewDragHelper helper = create(forParent, cb);
+    public static DraggingHelper  create(ViewGroup forParent, float sensitivity, DraggingInteractionCallback cb) {
+        final DraggingHelper  helper = create(forParent, cb);
         helper.mTouchSlop = (int) (helper.mTouchSlop * (1 / sensitivity));
         return helper;
     }
@@ -372,12 +351,12 @@ public class ViewDragHelper {
      * @param context Context to initialize config-dependent params from
      * @param forParent Parent view to monitor
      */
-    private ViewDragHelper(Context context, ViewGroup forParent, Callback cb) {
+    private DraggingHelper (Context context, ViewGroup forParent, DraggingInteractionCallback cb) {
         if (forParent == null) {
             throw new IllegalArgumentException("Parent view may not be null");
         }
         if (cb == null) {
-            throw new IllegalArgumentException("Callback may not be null");
+            throw new IllegalArgumentException("DraggingInteractionCallback may not be null");
         }
 
         mParentView = forParent;
@@ -395,7 +374,7 @@ public class ViewDragHelper {
 
     /**
      * Set the minimum velocity that will be detected as having a magnitude greater than zero
-     * in pixels per second. Callback methods accepting a velocity will be clamped appropriately.
+     * in pixels per second. DraggingInteractionCallback methods accepting a velocity will be clamped appropriately.
      *
      * @param minVel Minimum velocity to detect
      */
@@ -405,7 +384,7 @@ public class ViewDragHelper {
 
     /**
      * Return the currently configured minimum velocity. Any flings with a magnitude less
-     * than this value in pixels per second. Callback methods accepting a velocity will receive
+     * than this value in pixels per second. DraggingInteractionCallback methods accepting a velocity will receive
      * zero as a velocity value if the real detected velocity was below this threshold.
      *
      * @return the minimum velocity that will be detected
@@ -425,8 +404,8 @@ public class ViewDragHelper {
 
     /**
      * Enable edge tracking for the selected edges of the parent view.
-     * The callback's {@link Callback#onEdgeTouched(int, int)} and
-     * {@link Callback#onEdgeDragStarted(int, int)} methods will only be invoked
+     * The callback's {@link DraggingInteractionCallback#onEdgeTouched(int, int)} and
+     * {@link DraggingInteractionCallback#onEdgeDragStarted(int, int)} methods will only be invoked
      * for edges for which edge tracking has been enabled.
      *
      * @param edgeFlags Combination of edge flags describing the edges to watch
@@ -452,7 +431,7 @@ public class ViewDragHelper {
 
     /**
      * Capture a specific child view for dragging within the parent. The callback will be notified
-     * but {@link Callback#tryCaptureView(android.view.View, int)} will not be asked permission to
+     * but {@link DraggingInteractionCallback#tryCaptureView(android.view.View, int)} will not be asked permission to
      * capture this view.
      *
      * @param childView Child view to capture
@@ -468,21 +447,6 @@ public class ViewDragHelper {
         mActivePointerId = activePointerId;
         mCallback.onViewCaptured(childView, activePointerId);
         setDragState(STATE_DRAGGING);
-    }
-
-    /**
-     * @return The currently captured view, or null if no view has been captured.
-     */
-    public View getCapturedView() {
-        return mCapturedView;
-    }
-
-    /**
-     * @return The ID of the pointer currently dragging the captured view,
-     *         or {@link #INVALID_POINTER}.
-     */
-    public int getActivePointerId() {
-        return mActivePointerId;
     }
 
     /**
@@ -520,7 +484,6 @@ public class ViewDragHelper {
             final int newY = mScroller.getCurrY();
             mCallback.onViewPositionChanged(mCapturedView, newX, newY, newX - oldX, newY - oldY);
         }
-//        setDragState(STATE_IDLE);
     }
 
     /**
@@ -528,10 +491,6 @@ public class ViewDragHelper {
      * If this method returns true, the caller should invoke {@link #continueSettling(boolean)}
      * on each subsequent frame to continue the motion until it returns false. If this method
      * returns false there is no further work to do to complete the movement.
-     *
-     * <p>This operation does not count as a capture event, though {@link #getCapturedView()}
-     * will still report the sliding view while the slide is in progress.</p>
-     *
      * @param child Child view to capture and animate
      * @param finalLeft Final left position of child
      * @param finalTop Final top position of child
@@ -558,7 +517,7 @@ public class ViewDragHelper {
     public boolean settleCapturedViewAt(int finalLeft, int finalTop) {
         if (!mReleaseInProgress) {
             throw new IllegalStateException("Cannot settleCapturedViewAt outside of a call to " +
-                    "Callback#onViewReleased");
+                    "DraggingInteractionCallback#onViewReleased");
         }
 
         return forceSettleCapturedViewAt(finalLeft, finalTop,
@@ -691,7 +650,7 @@ public class ViewDragHelper {
     public void flingCapturedView(int minLeft, int minTop, int maxLeft, int maxTop) {
         if (!mReleaseInProgress) {
             throw new IllegalStateException("Cannot flingCapturedView outside of a call to " +
-                    "Callback#onViewReleased");
+                    "DraggingInteractionCallback#onViewReleased");
         }
 
         mScroller.fling(mCapturedView.getLeft(), mCapturedView.getTop(),
@@ -975,9 +934,7 @@ public class ViewDragHelper {
                 if (toCapture == mCapturedView && mDragState == STATE_SETTLING) {
                     tryCaptureViewForDrag(toCapture, pointerId);
                 }
-                if (toCapture.getId() == R.id.mapContainer) {
-                  return false;
-                }
+
                 final int edgesTouched = mInitialEdgesTouched[pointerId];
                 if ((edgesTouched & mTrackingEdges) != 0) {
                     mCallback.onEdgeTouched(edgesTouched & mTrackingEdges, pointerId);
@@ -1023,7 +980,7 @@ public class ViewDragHelper {
 
                     reportNewEdgeDrags(dx, dy, pointerId);
                     if (mDragState == STATE_DRAGGING) {
-                        // Callback might have started an edge drag
+                        // DraggingInteractionCallback might have started an edge drag
                         break;
                     }
 
@@ -1147,7 +1104,7 @@ public class ViewDragHelper {
 
                         reportNewEdgeDrags(dx, dy, pointerId);
                         if (mDragState == STATE_DRAGGING) {
-                            // Callback might have started an edge drag.
+                            // DraggingInteractionCallback might have started an edge drag.
                             break;
                         }
 
@@ -1440,7 +1397,7 @@ public class ViewDragHelper {
 
     /**
      * Find the topmost child under the given point within the parent view's coordinate system.
-     * The child order is determined using {@link Callback#getOrderedChildIndex(int)}.
+     * The child order is determined using {@link DraggingInteractionCallback#getOrderedChildIndex(int)}.
      *
      * @param x X position to test in the parent's coordinate system
      * @param y Y position to test in the parent's coordinate system

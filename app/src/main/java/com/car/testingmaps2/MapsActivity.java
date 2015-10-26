@@ -25,7 +25,7 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, MapPanel.PanelSlideListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SlidingMapPanel.PanelSlideListener {
 
     private static final String TAG = MapsActivity.class.getSimpleName();
     private static final float DEFAULT_ZOOM_LEVEL = 14;
@@ -36,7 +36,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ViewGroup rootLayout;
     private int height;
     private LatLng sydney;
-    private MapPanel slidingLayout;
+    private SlidingMapPanel slidingLayout;
     private float pxOfDp;
     private View resizingView;
     private Handler mainHandler;
@@ -47,32 +47,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-
-        // Get a handler that can be used to post to the main thread
-        mainHandler = new Handler(getMainLooper());
-
-
-        pxOfDp = convertDpToPixels(1, getApplicationContext());
-        rootLayout = (ViewGroup) findViewById(R.id.root);
-        slidingLayout = (MapPanel) findViewById(R.id.sliding_layout);
-        resizingView = findViewById(R.id.resizingView);
-        resizedLayout = (LinearLayout) findViewById(R.id.resizedLayout);
-
-        resizedLayout.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                Log.d(TAG, "onTouch: " + (v.getClass().getName()));
-                return false;
-            }
-        });
-
-
-        slidingLayout.setPanelSlideListener(this);
-
-        mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-
+        initialize();
         ViewTreeObserver vto = rootLayout.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -85,15 +60,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    private void initialize() {
+
+        // Get a handler that can be used to post to the main thread
+        mainHandler = new Handler(getMainLooper());
+
+        pxOfDp = convertDpToPixels(1, getApplicationContext());
+        rootLayout = (ViewGroup) findViewById(R.id.root);
+        slidingLayout = (SlidingMapPanel) findViewById(R.id.sliding_layout);
+        resizingView = findViewById(R.id.resizingView);
+
+        slidingLayout.setPanelSlideListener(this);
+        mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         sydney = new LatLng(43.211722, 27.916240);
         mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(sydney, DEFAULT_ZOOM_LEVEL));
-//        LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-//        Log.d(TAG, "onMapReady: " + bounds.toString());
-//
     }
 
     @Override
@@ -114,12 +103,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onPanelCollapsed(View panel) {
-
-//        goToLastMarker();
-
-        // Second option
-//        slidingLayout.setTouchEnabled(false);
-//          mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(mMap.getCameraPosition().target.latitude - 7, mMap.getCameraPosition().target.longitude), 5));
     }
 
     private void goToLastMarker() {
@@ -137,11 +120,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
         Log.d(TAG, "onMapReady: " + bounds.toString());
         mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, 8));
-        // Second option
-//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
-//                new LatLng(mMap.getCameraPosition().target.latitude + DEFAULT_COLLAPSED_OFFSET,
-//                        mMap.getCameraPosition().target.longitude), DEFAULT_ZOOM_LEVEL));
-
     }
 
     @Override
